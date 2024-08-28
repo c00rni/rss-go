@@ -68,10 +68,16 @@ func (cfg apiConfig) handleUnfollowFeed(w http.ResponseWriter, r *http.Request, 
 }
 
 func (cfg apiConfig) handleGetUserFeeds(w http.ResponseWriter, r *http.Request, user database.User) {
-	feeds, err := cfg.DB.GetUserFeeds(r.Context(), user.ID)
+	userFeeds, err := cfg.DB.GetUserFeeds(r.Context(), user.ID)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized user.")
 		return
 	}
+
+	feeds := []Feed{}
+	for _, feed := range userFeeds {
+		feeds = append(feeds, databaseFeedToFeed(feed))
+	}
+
 	respondWithJSON(w, http.StatusOK, feeds)
 }
