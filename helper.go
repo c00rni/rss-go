@@ -40,3 +40,10 @@ func extractAuthorization(r *http.Request, prefix string) (string, error) {
 	}
 	return target, nil
 }
+
+func extractParameter(r *http.Request, parameter string) (string, error) {
+	if v := r.URL.Query().Get(parameter); v != "" {
+		return v, nil
+	}
+	return "", errors.New(fmt.Sprintf("Parameter %v must be set.", parameter))
+}

@@ -41,3 +41,55 @@ func (q *Queries) FollowFeed(ctx context.Context, arg FollowFeedParams) (Feedfol
 	)
 	return i, err
 }
+
+const getUserFeeds = `-- name: GetUserFeeds :many
+SELECT id, created_at, updated_at, name, url, user_id
+FROM feeds
+WHERE id IN (SELECT feed_id from feedFollowed as f where f.user_id = $1)
+`
+
+func (q *Queries) GetUserFeeds(ctx context.Context, userID uuid.UUID) ([]Feed, error) {
+	rows, err := q.db.QueryContext(ctx, getUserFeeds, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Feed
+	for rows.Next() {
+		var i Feed
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Url,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const unfollow = `-- name: Unfollow :exec
+DELETE FROM feedFollowed
+WHERE feed_id = $1
+AND user_id = $2
+`
+
+type UnfollowParams struct {
+	FeedID uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) Unfollow(ctx context.Context, arg UnfollowParams) error {
+	_, err := q.db.ExecContext(ctx, unfollow, arg.FeedID, arg.UserID)
+	return err
+}

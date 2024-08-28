@@ -15,6 +15,11 @@ func (cfg apiConfig) handleCreateFeed(w http.ResponseWriter, r *http.Request, us
 		Url  string `json:"url"`
 	}
 
+	type respond struct {
+		Feed        database.Feed         `json:"feed"`
+		Feed_Follow database.Feedfollowed `json:"feed_followed"`
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	inputData := request{}
 	err := decoder.Decode(&inputData)
@@ -24,9 +29,10 @@ func (cfg apiConfig) handleCreateFeed(w http.ResponseWriter, r *http.Request, us
 	}
 
 	today := time.Now()
+	feedId := uuid.New()
 
 	feed, err := cfg.DB.CreateFeeds(r.Context(), database.CreateFeedsParams{
-		ID:        uuid.New(),
+		ID:        feedId,
 		CreatedAt: today,
 		UpdatedAt: today,
 		Name:      inputData.Name,
@@ -39,7 +45,16 @@ func (cfg apiConfig) handleCreateFeed(w http.ResponseWriter, r *http.Request, us
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create the feed")
 		return
 	}
-	respondWithJSON(w, http.StatusCreated, feed)
+
+	// Automaticly follow the feed
+	feedFollow, _ := cfg.DB.FollowFeed(r.Context(), database.FollowFeedParams{
+		FeedID:    feedId,
+		UserID:    user.ID,
+		CreatedAt: today,
+		UpdatedAt: today,
+	})
+
+	respondWithJSON(w, http.StatusCreated, respond{Feed: feed, Feed_Follow: feedFollow})
 }
 
 func (cfg apiConfig) handleGetFeeds(w http.ResponseWriter, r *http.Request) {
@@ -50,35 +65,4 @@ func (cfg apiConfig) handleGetFeeds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, feeds)
-}
-
-func (cfg apiConfig) handleFollowingFeed(w http.ResponseWriter, r *http.Request, user database.User) {
-	type request struct {
-		FeedID uuid.UUID `json:"feed_id"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	inputData := request{}
-	err := decoder.Decode(&inputData)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
-		return
-	}
-
-	today := time.Now()
-
-	follow, err := cfg.DB.FollowFeed(r.Context(), database.FollowFeedParams{
-		FeedID:    inputData.FeedID,
-		UserID:    user.ID,
-		CreatedAt: today,
-		UpdatedAt: today,
-	})
-
-	if err != nil {
-		log.Printf("Failed to follow the feed %s : %s", inputData.FeedID, err)
-		respondWithError(w, http.StatusInternalServerError, "Can't follow the feed.")
-		return
-	}
-	respondWithJSON(w, http.StatusCreated, follow)
-
 }
