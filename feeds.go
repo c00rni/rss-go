@@ -51,3 +51,34 @@ func (cfg apiConfig) handleGetFeeds(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusCreated, feeds)
 }
+
+func (cfg apiConfig) handleFollowingFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+	type request struct {
+		FeedID uuid.UUID `json:"feed_id"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	inputData := request{}
+	err := decoder.Decode(&inputData)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
+		return
+	}
+
+	today := time.Now()
+
+	follow, err := cfg.DB.FollowFeed(r.Context(), database.FollowFeedParams{
+		FeedID:    inputData.FeedID,
+		UserID:    user.ID,
+		CreatedAt: today,
+		UpdatedAt: today,
+	})
+
+	if err != nil {
+		log.Printf("Failed to follow the feed %s : %s", inputData.FeedID, err)
+		respondWithError(w, http.StatusInternalServerError, "Can't follow the feed.")
+		return
+	}
+	respondWithJSON(w, http.StatusCreated, follow)
+
+}
