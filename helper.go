@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
@@ -28,4 +31,12 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 	respondWithJSON(w, code, errorResponse{
 		Error: msg,
 	})
+}
+
+func extractAuthorization(r *http.Request, prefix string) (string, error) {
+	target, found := strings.CutPrefix(r.Header.Get("Authorization"), prefix)
+	if !found {
+		return target, errors.New(fmt.Sprintf("Prefix '%v' not found.", prefix))
+	}
+	return target, nil
 }

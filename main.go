@@ -35,7 +35,9 @@ func main() {
 
 	mux.HandleFunc("/v1/healthz", handleHealthz)
 	mux.HandleFunc("/v1/err", handleError)
-	mux.HandleFunc("POST /v1/users", apiCfg.handleCreateUser)
+	mux.HandleFunc("POST /users", apiCfg.handleCreateUser)
+	mux.HandleFunc("GET /users", apiCfg.middlewareAuth(handleGetUser))
+	mux.HandleFunc("POST /v1/feeds", apiCfg.middlewareAuth(apiCfg.handleCreateFeed))
 
 	srv := &http.Server{
 		Handler: mux,

@@ -13,13 +13,6 @@ func (cfg apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 
-	type response struct {
-		Id         uuid.UUID `json:"id"`
-		CreateDate time.Time `json:"created_at"`
-		UpdateDate time.Time `json:"updated_at"`
-		Name       string    `json:"name"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
 	inputData := request{}
 	err := decoder.Decode(&inputData)
@@ -41,4 +34,8 @@ func (cfg apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, user)
+}
+
+func handleGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
+	respondWithJSON(w, http.StatusOK, user)
 }
