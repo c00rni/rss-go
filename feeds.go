@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/c00rni/rss-go/internal/database"
 	"github.com/google/uuid"
+	"log"
 	"net/http"
 	"time"
 )
@@ -34,8 +35,19 @@ func (cfg apiConfig) handleCreateFeed(w http.ResponseWriter, r *http.Request, us
 	})
 
 	if err != nil {
+		log.Printf("Failed to create ther user %s : %s", inputData.Name, err)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create the feed")
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, feed)
+}
+
+func (cfg apiConfig) handleGetFeeds(w http.ResponseWriter, r *http.Request) {
+	feeds, err := cfg.DB.GetFeeds(r.Context())
+	if err != nil {
+		log.Printf("Failed to fetch data from the DB : %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get the feeds.")
+		return
+	}
+	respondWithJSON(w, http.StatusCreated, feeds)
 }
