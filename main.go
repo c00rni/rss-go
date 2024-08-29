@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type apiConfig struct {
@@ -43,6 +44,7 @@ func main() {
 	mux.HandleFunc("DELETE /v1/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handleUnfollowFeed))
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handleGetUserFeeds))
 
+	go apiCfg.scrapFeeds(time.Minute, 3)
 	srv := &http.Server{
 		Handler: mux,
 		Addr:    "localhost:" + port,

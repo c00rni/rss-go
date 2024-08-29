@@ -9,7 +9,7 @@ ORDER BY name;
 
 -- name: GetNextFeedsToFetch :many
 SELECT * FROM feeds
-ORDER BY last_fetched_at DESC NULLS FIRST
+ORDER BY last_fetched_at NULLS FIRST
 LIMIT $1;
 
 -- name: MarkFeedFetched :one
