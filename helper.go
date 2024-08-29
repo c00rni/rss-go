@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -41,9 +43,22 @@ func extractAuthorization(r *http.Request, prefix string) (string, error) {
 	return target, nil
 }
 
-func extractParameter(r *http.Request, parameter string) (string, error) {
-	if v := r.URL.Query().Get(parameter); v != "" {
-		return v, nil
+func fetchRSS(url string) (RSSFeed, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return RSSFeed{}, err
 	}
-	return "", errors.New(fmt.Sprintf("Parameter %v must be set.", parameter))
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return RSSFeed{}, err
+	}
+
+	rssFeed := RSSFeed{}
+	err = xml.Unmarshal(body, &rssFeed)
+	if err != nil {
+		return RSSFeed{}, err
+	}
+	return rssFeed, nil
 }
