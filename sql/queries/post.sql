@@ -5,6 +5,6 @@ RETURNING *;
 
 -- name: GetUserPosts :many
 SELECT * FROM post AS p
-WHERE p.id IN (
-    SELECT f.id FROM feedFollowed AS f
+WHERE p.feed_id IN (
+    SELECT feed_id FROM feedFollowed AS f
     WHERE f.user_id = $1);

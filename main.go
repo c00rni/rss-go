@@ -43,6 +43,7 @@ func main() {
 	mux.HandleFunc("POST /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handleFollowingFeed))
 	mux.HandleFunc("DELETE /v1/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handleUnfollowFeed))
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handleGetUserFeeds))
+	mux.HandleFunc("GET /v1/posts", apiCfg.middlewareAuth(apiCfg.handleGetUserPosts))
 
 	go apiCfg.scrapFeeds(time.Minute, 3)
 	srv := &http.Server{
